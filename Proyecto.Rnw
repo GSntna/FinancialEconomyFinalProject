@@ -1,0 +1,462 @@
+
+\documentclass{article}
+%------------------------------------------------------------------------------
+%paper.tex
+\usepackage{blindtext} % Package to generate dummy text throughout this template 
+\usepackage[sc]{mathpazo} % Use the Palatino font
+\usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
+\linespread{1.05} % Line spacing - Palatino needs more space between lines
+\usepackage{microtype} % Slightly tweak font spacing for aesthetics
+
+\usepackage[english]{babel} % Language hyphenation and typographical rules
+\usepackage{setspace}
+
+\usepackage[hmarginratio=1:1,top=32mm,columnsep=20pt, left = 1.75in]{geometry} % Document margins
+\usepackage[hang, small,labelfont=bf,up,textfont=it,up]{caption} % Custom captions under/above floats in tables or figures
+\usepackage{booktabs} % Horizontal rules in tables
+
+\usepackage{lettrine} % The lettrine is the first enlarged letter at the beginning of the text
+
+\usepackage{enumitem} % Customized lists
+\setlist[itemize]{noitemsep} % Make itemize lists more compact
+
+\usepackage{abstract} % Allows abstract customization
+\renewcommand{\abstractnamefont}{\normalfont\bfseries} % Set the "Abstract" text to bold
+\renewcommand{\abstracttextfont}{\normalfont\small\itshape} % Set the abstract itself to small italic text
+
+\usepackage{titlesec} % Allows customization of titles
+\renewcommand\thesection{\Roman{section}} % Roman numerals for the sections
+\renewcommand\thesubsection{\roman{subsection}} % roman numerals for subsections
+\titleformat{\section}[block]{\large\scshape\centering}{\thesection.}{1em}{} % Change the look of the section titles
+\titleformat{\subsection}[block]{\large}{\thesubsection.}{1em}{} % Change the look of the section titles
+
+\usepackage{fancyhdr} % Headers and footers
+\pagestyle{fancy} % All pages have headers and footers
+\fancyhead{} % Blank out the default header
+\fancyfoot{} % Blank out the default footer
+\fancyhead[C]{Efecto del Desempleo en el Crímen $\bullet$ Noviembre 2021 $\bullet$ Gustavo Santana} % Custom header text
+%\fancyfoot[RO,LE]{\thepage} % Custom footer text
+
+\usepackage{titling} % Customizing the title section
+
+\usepackage{hyperref} % For hyperlinks in the PDF
+ %------------------------------------------------------------------------------
+ %RSweave packages
+\usepackage{amsmath}
+\usepackage{amscd}
+\usepackage[tableposition=top]{caption}
+\usepackage{ifthen}
+\usepackage[utf8]{inputenc}
+%------------------------------------------------------------------------------
+%Exttra packages
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{subcaption}
+
+%------------------------------------------------------------------------------
+\setlength{\droptitle}{-4\baselineskip} % Move the title up
+
+\pretitle{\begin{center}\Huge\bfseries} % Article title formatting
+\posttitle{\end{center}} % Article title closing formatting
+\title{Efecto del Desempleo en la Tasa de Criminaliad en EE.UU.} % Article title
+\author{%
+\textsc{Gustavo Santana Velázquez} \\
+\normalsize Universidad de Guadalajara \\ % Your institution
+\normalsize 217737864 % Your email address
+%\and % Uncomment if 2 authors are required, duplicate these 4 lines if more
+%\textsc{Jane Smith}\thanks{Corresponding author} \\[1ex] % Second author's name
+%\normalsize University of Utah \\ % Second author's institution
+%\normalsize \href{mailto:jane@smith.com}{jane@smith.com} % Second author's email address
+}
+
+\usepackage{hyperref}
+\date{\today} % Leave empty to omit a date
+\renewcommand{\maketitlehookd}{%
+\begin{abstract}
+\noindent El siguiente trabajo toma un enfoque de series de tiempo para identificar la relación que existe entre la tasa de desempleo y la tasa de crimen en Estados Unidos de América durante los años 1960 y 2019. Los resultados son obtenidos a través de un modelo de Vectores Autorregresivos (VAR) para analizar el impacto que tiene el desempleo en el crimen. Este trabajo tiene como objetivo determinar si la relación teórica que existe entre ambas variables se puede comprobar de manera empírica. Las bases de datos fueron extraídas del FBI para obtener los históricos de crímenes por categoría y del US Bureau of Labour Statistics para la tasa de desempleo anual. 
+\end{abstract}
+}
+
+\doublespacing
+\makeatletter
+\renewcommand*{\thesection}{\arabic{section}}
+\renewcommand*{\thesubsection}{\thesection.\arabic{subsection}}
+\renewcommand*{\p@subsection}{}
+\renewcommand*{\thesubsubsection}{\thesubsection.\arabic{subsubsection}}
+\renewcommand*{\p@subsubsection}{}
+\makeatother
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+
+\maketitle
+
+\pagebreak
+\tableofcontents
+\pagebreak
+
+\section{Introducción}
+\lettrine[nindent=0em,lines=3]{L}a relación potencial entre el desempleo y la tasa de criminalidad ha sido objeto de estudio desde finales del siglo XIX y analizado desde diferentes perspectivas (psicológica, económica, antropológica, etc.). A raíz de lo anterior han surgido muchas teorías, muchas de las cuales concuerda en que existe una correlación positiva entre estas dos variables, es decir, cuando la tasa de desempleo presenta un incremento, la tasa de criminalidad debería presentarlo también. A este fenómeno generalmente se le atribuye la explicación de que la condición de desempleo genera motivos para delinquir. En contraste, las investigaciones empíricas arrojan resultados inconsistentes, en lo que se muestra una relación baja o nula. Al revisar estas últimas, pareciera que los investigadores han realizado de manera errónea los métodos empíricos antes de haber errado en la literatura teórica. Sin embargo, Cantor y Land (1985) introdujeron un modelo en el que separaron la tasa de criminalidad en dos variables, la motivación del crimen y la oportunidad del crimen, conceptos que tienen una relación contraria con la tasa de desempleo, es decir, la primera tiene una relación positiva con la tasa de desempleo mientras que la segunda una negativa. La suma de estos dos factores da como resultado la tasa de criminalidad y es por esta razón que la correlación entre el desempleo y el crimen parecía ser nula. Cantor y Land también proponen que para medir el impacto del desempleo en el crimen se deben tomar en cuenta también los rezagos.\\ 
+
+Dicho lo anterior, el objetivo de este trabajo de investigación es obtener el impacto que tiene el desempleo en la tasa de criminalidad en Estados Unidos. Para esto, se utilizará un modelo de Vectores Autorregresivos (VAR), posteriormente se correrá un análisis de impulso respuesta basado en la descomposición de Cholesky para determinar los efectos que tiene el aumento del desempleo en la tasa de criminalidad. \\
+
+Para este modelo se tomará la tasa de desempleo del U. S. Bureau of Labor Statistics y se obtendrá la tasa de criminalidad del Disaster Center, con una base de datos conteniendo el total de crímenes por Violencia, Propiedad, Homicidio, Violación, Robo, Asalto Agravado, Asalto, Hurto y Robo de Automóvil. Para ambas bases de datos la frecuencia es anual y se incluyen los años entre 1960 y 2019. \\
+En la primera parte del trabajo se revisará la literatura que explica la relación entre ambas variables, con especial énfasis a aquella realizada por Cantor y Land en 1984, debido que en ella se explica la dinámica entre las variables y porqué se deben utilizar rezagos. También se revisarán algunas investigaciones más recientes que han utilizado la misma metodología, pero incorporando otras variables que miden el bienestar económico de un país como el Producto Interno Bruto per cápita, Consumo e Ingreso además de Desempleo. En este mismo apartado se explicará un poco sobre el método de Vectores Autorregresivos (VAR). \\
+
+Posteriormente, en la sección de Metodología, se hará un análisis visual y estadístico sobre la base de datos. En este apartado se harán las pruebas necesarias previas al modelado, se hará el modelado y se harán las pruebas de los residuales. Finalmente se obtendrán las funciones de impulso respuesta para determinar el impacto del desempleo sobre el crimen. \\
+
+Finalmente, en resultados y conclusiones se analizarán los resultados del modelo y se harán propuestas sobre cómo abordar el problema de criminalidad con base en lo anterior. \\
+
+\section{Revisión de literatura}
+La literatura base tomada para este trabajo es la realizada por David Cantor y Kenneth Land en 1984 en su investigación “Unemployment and Crime Rates in the Post-World War II United States: A Theoretical and Empirical Analysis”; en el cual reconocen que, a pesar de que la mayoría de las investigaciones teóricas realizadas hasta el momento indicaban que un aumento en la tasa de desempleo tendría un aumento directo en la tasa de criminalidad; las investigaciones empíricas demostraban una correlación muy baja o nula entre ambas variables. Cabe mencionar que la mayoría de las teorías generadas alrededor de este tema hasta ese momento implicaban una relación contemporánea, es decir, casi inmediata.\\
+
+Cantor y Land (1984) proponen un nuevo modelo, en el que el número de crímenes depende de tres factores: (1) delincuentes con una motivación, (2) víctimas y (3) falta de un agente de seguridad. La ecuación anterior puede ser agrupada y explicada de la siguiente manera: 
+
+\[tasa\;de\;criminalidad\;=\;efecto\;motivacional\;+\;oportunidad\;del\;crimen\]
+
+Esta explicación une las teorías anteriores en que relacionaban el desempleo al aumento de delincuentes potenciales en la población con las teorías que relacionaban el desempleo con el aumento de potenciales víctimas. En otras palabras, para que el número de crímenes aumente, debe de haber un aumento en el número de delincuentes motivados y en el número de objetivos potenciales (ya sean personas, viviendas, automóviles, etc.) sin un agente de seguridad presente. \\
+
+Analicemos la relación que tiene el desempleo con cada una de estas tres variables. Para la parte de motivación del crimen, la relación con el desempleo ha sido estudiada y considerada trivial desde hace muchos años. Cantor y Land (1985) y Cook y Watson (2014) mencionan tres teorías que son tomadas como las principales: Teoría de la Tensión especifica que las causas de un crimen son originadas por la frustración resultante de la discrepancia entre las aspiraciones y la realidad de un individuo; la Teoría Utilitaria o Racional indica que el individuo evalúa la relación costo-beneficio entre el trabajo y el robo, la relación con el empleo puede ser menos trivial, pero en un entorno en donde el desempleo es alto, la gente se ve orillada a tomar trabajos mal pagados para cubrir sus gastos esenciales, debido a esto, es probable que una persona en necesidad opte por robar; y finalmente la Teoría de Conflicto o Marxista la cual indica que la criminalidad surge de la contradicción entre producción y consumo en una sociedad capitalista.\\
+
+Cabe mencionar que ninguna de las teorías anteriores propone una relación determinística entre Empleo y Crimen, es decir, que un individuo se encuentre desempleado no implica cometerá un crimen. Estar en condición de desempleado pone a un individuo dentro de un grupo que tiene una probabilidad mayor de cometer un crimen, esto último aplicara para algunos miembros de este grupo mientras que otros optarán por otras alternativas (Cantor y Land, 1985). De lo anterior podemos concluir que la relación del desempleo con la motivación del crimen indica ser positiva.\\
+
+Por el otro lado, la oportunidad de crimen, la cual agrupa las variables (2) victimas y (3) agentes de seguridad, parece mantener una relación inversa al desempleo sorprendentemente. Como indican Cook y Watson (2014) en un análisis de la teoría propuesta por Cantor y Land, para crímenes con un componente de propiedad (robo, asalto, robo a vivienda, robo de automóvil) el desempleo afecta de dos maneras: una alta tasa de desempleo hace que las personas pasen más tiempo en actividades lúdicas y en sus viviendas, aumentando la concentración de gente en las zonas residenciales (barrios, vecindarios), por lo que, a pesar de que el factor de motivación aumenta, el número de víctimas potenciales (es decir, que se encuentren en un lugar y momento susceptible para un delito) es menor al pasar la mayor parte del tiempo en sus casas; de manera similar, el agente de seguridad aumenta, dado que las propiedades de los individuos se encuentran guardadas o vigiladas por sus propietarios. \\
+
+Adicional a lo anterior, el efecto del aumento del desempleo en la economía genera la disminución de la producción y consumo. Debido a esto el desempleo puede ser utilizado como un índice de actividad que nos indica que, a un nivel menor, la circulación de personas y de “propiedades” va a ser menor. Esta disminución en la circulación más el aumento de los agentes de seguridad cuando todas las demás variables se mantienen constantes presenta un escenario en el que el número de delitos con un componente de propiedad potenciales se ve reducido drásticamente (Cantor y Land, 1985). \\
+
+Para el resto de las categorías de crímenes o crímenes violentos (homicidio, violación y asalto agraviado), Cantor y Land (1985) aseguran que tienen un comportamiento similar a los crímenes de propiedad debido a que en la mayoría de los casos la víctima y victimario dentro de estos crímenes no se conocen. Para soportar lo anterior, estos autores toman como base un informe de 1980 de la policía en el que se presentan las estadísticas de homicidio y violación. Solo en el ´24.5\% de los homicidios el victimario tenía una relación familiar con el asesinado. El resto eran cometidos por alguien conocido por la víctima (26.4\%), por un extraño (13.3\%) o por alguien desconocido por la policía (35\%); Cantor y Land asumen que esta última categoría se suma a extraño debido a la facilidad con la que la policía debería ser capaz de resolver el caso en caso contrario. Adicionalmente, muchos de los asesinatos son consecuencia de crímenes de propiedad, por lo que el homicidio también se encuentra indirectamente afectado por este hecho. En cuanto a la violación, ambos autores también toman la estadística proporcionada por la policía y muestran que el 60\% de las violaciones son por un extraño. Debido a lo anterior, el hecho de que el desempleo concentre a la gente en sus hogares reduce el riesgo de este tipo de crímenes igualmente. \\
+
+Con base en lo anterior, parecería que el desempleo no afectaría en gran medida la tasa de criminalidad debido a la relación positiva y negativa de cada una de sus variables. De manera resumida, en un mismo periodo de tiempo, cuando el desempleo aumenta la motivación de crimen también lo hace, pero las oportunidades de crimen disminuyen. Esta es la razón por la que las investigaciones empíricas previas a la de Cantor y Land habían arrojado una correlación baja entre ambas variables. \\
+
+¿Entonces cómo impacta el desempleo en el crimen? Cantor y Land se dieron cuenta de que la parte de motivación del crimen si tenía correlación con el desempleo en un rezago. Esto se explica debido a la ayuda que recibe una persona cuando recién pierde su empleo, es decir, en el mismo periodo en que aumenta el desempleo. Bennet and Ouazad (2016) respaldan esta teoría mostrando que, al momento de perder el empleo, el individuo cuenta con seguro de desempleo, además de ahorros, ayuda de amigos y familiares, etc. Por lo anterior hace sentido que las personas que tienen una probabilidad mayor a cometer actos delictivos después de un tiempo sean aquellos que son solteros, tiene un bajo nivel educativo o no cuentan con experiencia, ya que no cuentan con un apoyo económico, pueden tener dificultades para encontrar trabajo y además se están acabando sus ahorros. Lo anterior sirve como motivación, y cuando la tasa de desempleo haya bajado, estos individuos pueden encontrarse en un escenario en el que se exista alta motivación y más oportunidades de crimen. \\
+
+Cook y Watson (2014) repitieron el modelo de Cantor y Land pero con un enfoque diferente, en vez de limitarse a utilizar el desempleo únicamente, utilizaron también el PIB, el Ingreso y el Consumo real per cápita; bajo al asunción de que lo que realmente marca la relación entre el desempleo y el crimen, es el índice de vida medido a través del desempleo. Con estas variables agregadas el modelo resultaría más exacto en teoría. Además, contrario a lo propuesto por Cantor y Land originalmente, utilizaron los crímenes bajo la categoría de violencia (homicidio, violación y asalto agravado) como medidores de oportunidad de crimen (el cual en teoría tiene un efecto contemporáneo al desempleo) y los crímenes categorizados como de propiedad (robo, hurto, asalto, robo de automóvil) como medidores del efecto motivacional (el cual en teoría tiene un efecto rezagado). Los resultados mostraron una correlación más significativa del PIB, el Ingreso y el Consumo con los crímenes en todas las categorías. Sin embargo esto se desvía de la relación principal de este proyecto, por lo que para la estimación de esta investigación nos apegamos a la relación original empleo-crimen.\\
+
+Finalmente, existen investigaciones recientes como la de Calvó y Armengol (2003) que aseguran que la criminalidad también tiene un efecto en el desempleo. Esta relación nunca ha sido investigada a profundidad y fue abordada hasta hace poco. La investigación por Calvó y Armengol (2003) fue hecha nivel municipio, los datos utilizados para esta investigación están a nivel país, por lo que para efectos de este proyecto no se tomará en cuenta esta relación. Sin embargo, cabe mencionar que existe la posibilidad de que ambas variables sean endógenas, por lo que para futuras investigaciones sería adecuado tomar en cuenta este hecho.\\
+
+\section{Vector Autorregresivo (VAR)}
+\subsection{Introducción del modelo}
+Para esta investigación se utilizará el modelo de Vectores Autorregresivos (VAR). Se trata de un modelo multivariado que es utilizado cuando se trabaja con dos o más series de tiempo las cuales tienen influencia entre ellas. Es decir, la relación entre las series es bidireccional. 
+
+Para un VAR bivariado (como el que se trabajará en esta investigación), el sistema de ecuaciones es el siguiente:
+
+\[y_t = \phi_{11} y_{t-1} + \phi_{12} x_{t-1} + u_t \]
+\[x_t = \phi_{21} y_{t-1} + \phi_{22} x_{t-1} + v_t \]
+
+Como podemos observar, cada variable depende en el primer rezago (en el caso del ejemplo) tanto de sí misma como de la otra variable. 
+
+El sistema anterior se puede expresar en forma de matriz de la siguiente manera: 
+
+\[
+\begin{pmatrix}
+y_t\\
+x_t
+\end{pmatrix}	
+=
+\begin{pmatrix}
+\phi_{11} & \phi_{12}\\
+\phi_{21} & \phi_{22}
+\end{pmatrix}	
++
+\begin{pmatrix}
+y_{t-1}\\
+x_{t-1}
+\end{pmatrix}	
++
+\begin{pmatrix}
+u_t\\
+v_t
+\end{pmatrix}	
+\]
+o de forma reducida: 
+\[z_t = \phi z_{t-1} + w_t \]
+
+El modelo VAR resulta bastante útil cuando existe evidencia de simultaneidad entre dos o más variables, y que sus relaciones se transmiten a lo largo de un determinado número de periodos (Novales, 2014).
+
+
+\section{Manejo de Bases de Datos}
+
+% Chunk de R oculto (echo=F)
+<<librerías y funciones, echo=F>>=
+# Instalar librerías (uncomment)
+#install.packages(c('readxl', 'forecast', 'vars', 'urca', 'ggoplot2', 'tseries', 'MTS', 'xtable'))
+
+# Carga de librerías en r 
+library(readxl)
+library(forecast)
+library(vars)
+library(ggplot2)
+library(tseries)
+library(MTS)
+library(urca)
+
+# Funciones
+# -- función de diferencias en logartimos
+log.diff <- function(vector.name){
+  log.vec <- log(vector.name)
+  t <- length(vector.name)
+  output.vector <- 2:t
+  for (i in 2:t) {
+    output.vector[i-1] = log.vec[i] - log.vec[i-1]
+  }
+  return(output.vector)
+}
+
+@
+
+\subsection{Origen de los datos}
+
+La tasa de desempleo fue recuperada del \href{https://data.bls.gov/timeseries/LNU04000000?years_option=all_years&periods_option=specific_periods&periods=Annual+Data}{\underline{U. S. Bureau of Labor Statistics}}, mientras que las estadísticas de crimen fueron extraídas del  \href{https://www.disastercenter.com/crime/uscrime.htm}{\underline{Disaster Center}}. La segunda base fue construida con base en los reportes trimestrales publicados por el FBI como parte del Uniform Crime Reporting (UCR) Program, el cual recopila datos de más de 18,000 agencias de seguridad en Estados Unidos. Ambas bases muestran los datos de los años entre 1960 y 2019, anuales.\\
+
+<<Carga de base de datos, echo=F>>=
+# Carga de base
+df <- read_excel("crime_unemp.xlsx", sheet = "Full_Data")
+df <- ts(df[,2:13], start = 1960)
+colnames(df) <- c('Population', 'Total Crimes', 'Violent', 'Property', 'Murder', 'Rape', 'Robbery', 'Agg Assault', 'Burglary', 'Larceny Th', 'Vehicle Th', 'Unemployment Rate')
+@
+
+
+\subsection{Exploración de bases de datos}
+
+Para la creación de la base de datos utilizada en esta investigación, se concatenaron las fuentes previamente descritas. La base cuenta una columna con la tasa de desempleo registrada anualmente entre 1960 y 2019, y con la tasa de criminalidad total y por categoría (descritas a continuación). Cabe mencionar que la fórmula utilizada por el FBI para calcular la tasa de crimen es la siguiente: 
+
+\[Tasa\;de\;crimen = \frac{numero\;de\;crimenes\;reportados}{poblacion}*100,000\]
+
+Los crimenes reportados están divididos en las siguientes categorías: 
+
+\noindent \textbf{Violentos}
+\begin{itemize}
+\item Murder (Homicidio)
+\item Forcible Rape (Violación)
+\item Aggravated Assault (Asalto Agravado).- Se refiere a una agresión cometida con la intención de lastimar (utilizando armas de fuego o cuchillos)
+\end{itemize}
+
+\noindent \textbf{De propiedad}
+\begin{itemize}
+\item Robbery (Robo).- Apropiarse de algo ajeno por medio de la fuerza o intimidación
+\item Burglary (Hurto).- Entrar intencionalmente a una propiedad ajena y tomar posesión de los bienes
+\item Larceny Theft (Robo en propiedad).- Apropiarse de algo sin necesidad de entrar a una propiedad o de usar fuerza/intimidación
+\item Vehicle Theft (Robo de vehículo)
+\end{itemize}
+
+En la Figura \ref{fig:categoria} se muestra la tasa de criminalidad por categoría durante el periodo mencionado.\\ 
+
+\begin{figure}
+\begin{center}
+<<label=crime_category, fig=TRUE, height=7.3, echo=F>>=
+plot(df[,2:11], main = 'Crímen por Categoría (EE. UU.)')
+@
+\end{center}
+\caption{Tasa de Crimen por Categoría de Estados Unidos para los años 1960-2019}
+\label{fig:categoria}
+\end{figure}
+
+Para este ejercicio, debido a que tanto crímenes violentos como crímenes de propiedad presentan un comportamiento similar con respecto al desempleo, utilizaremos la tasa de crimen total en el modelo. En la Figura \ref{fig:unemp_crime}, podemos observar el comportamiento del desempleo contra el crimen. \\
+
+\begin{figure}[H]
+\begin{center}
+<<label=unemp_crime_fig, fig=TRUE, echo=F>>=
+plot(df[,c(2,12)], main = 'Desempleo vs Crimen EE.UU. Anual (1960-2019)')
+@
+\end{center}
+\caption{Tasa de Desempleo y Tasa de Crimen (1960-2019)}
+\label{fig:unemp_crime}
+\end{figure}
+
+\section{Metodología}
+
+En esta sección se mencionará de forma detallada los pasos que se llevaron a cabo para la estimación del modelo: 
+
+\subsection{Estacionariedad de las series}
+Como podemos observar en la Figura \ref{fig:unemp_crime}, las series parecen ser no estacionarias. Esto lo comprobamos con la prueba formal de \emph{Dickey-Fuller Aumentada}, la cual tiene como \emph{H\textsubscript{0}: La serie no es estacionaria}. Efectivamente, tras realizar la prueba obtenemos un \emph{p-value} mayot a 0.05 para ambos casos, por lo que aceptamos la Hipótesis Nula. \\
+
+<<adf para series I(0), echo=FALSE, results=hide>>=
+summary(ur.df(df[,2], type = 'drift', lags = 0))
+summary(ur.df(df[,12], type = 'trend', lags = 0))
+@
+
+Para eliminar el problema de estacionariedad de las series, aplicamos logartimo a ambas series y obtenemos la primera diferencia. Las series quedan como se aprecia en la Figura \ref{fig:diff_log} 
+
+<<diferencia de logaritmos, echo=FALSE>>=
+unemp <- log.diff(df[,12])
+crime <- log.diff(df[,2])
+d.df2 <- ts(cbind.data.frame(unemp,crime), start = 1961)
+@
+
+\begin{figure}[H]
+\begin{center}
+<<label=diff.log, fig=TRUE, echo=F>>=
+plot(d.df2, col = 'blue', main = 'Diferencia de Logaritmos Desempleo vs Crimen (1961-2019)')
+@
+\end{center}
+\caption{Diferencia de Logaritmos de la Tasa de Desempleo y la Tasa de Crimen de EE. UU. (1960-2019)}
+\label{fig:diff_log}
+\end{figure}
+
+Tras haber hecho esta transformación, ambas series presentan un \emph{p-value} menor a 0.05 al realizar la prueba para raíz unitaria \emph{Dickey-Fuller Aumentada}, por lo que podemos asegurar que ambas son estacionarias. \\
+
+Curiosamente observamos que durante la Gran Recesión en 2008-2009, cuando el empleo tuvo un máximo histórico, la tasa de crímen bajó bastante. A pesar de que los expertos no han encontrado una explicación precisa o generado una teoría ampliamente aceptada (Rosenfeld, 2013), esto parece confirmar la teoría propuesta por Cantor y Land (1985); lo que sugeriría que la motivación de crímen puede haber aumentado pero la oportunidad de crimen aumentó de manera muy similar al desempleo. 
+
+\subsection{Estimación del modelo}
+Para determinar el número de rezagos \emph{p} que maximicen la precisión del modelo, se utilizan diferentes criterios, los cuales evalúan los Errores al Cuadrado (MSE) en diferentes rezagos. Lo óptimo es escoger aquella \emph{p} con el MSE más pequeño. Para determinar \emph{VAR(p)} en este caso, utilzamos la siguiente función de la paquetería \emph{vars} en R. 
+
+<<Selección de rezagos>>=
+VARselect(d.df2, lag.max = 10)$selection
+@
+
+Podemos observar que de acuerdo con los criterios Akaike's Information Criterion (AIC), Hannan-Quinn Criterion (HQ) y Akaike's Final Prediction Error (FPE) el rezago adecuado con el que se debe estimar el modelo es \emph{3}. Schwarz Criterion (SC) nos arroja 2, sin embargo, ignoraremos este resultado y nos enfocaremos en los demás. Se puede revisar el resumen del modelo completo en el apéndice \ref{resumen_modelo}.\\
+
+<<Modelo, echo=FALSE>>=
+my.model <- vars::VAR(d.df2, p = 3, type = 'none')
+@
+
+Como podemos observar en el resumen del modelo para crimen, tanto el primer rezago del desempleo como el tercero son significativos, esto parece confirmar la hipótesis de que el desempleo tiene un efecto rezagado en el crímen. Sin embargo, también observamos que el crímen parece ser igualmente significativo para el desempleo (apéndice \ref{resumen_modelo}).
+
+\subsubsection{Resumen del modelo para crimen}
+<<modelo_crimen, echo=FALSE>>=
+summary(my.model$varresult$crime)
+@
+
+\subsection{Evaluación de estabilidad del modelo}
+
+La evaluación de estabilidad de los vectores (eigenvalores) muestra que \emph{y\textsubscript{t}} y \emph{x\textsubscript{t}} (desempleo y crimen) son estacionarios, ya que todos sus eigenvalores son menores a |1|.
+
+<<eigenvalores>>=
+roots(my.model)
+@
+
+\subsection{Evaluación de los residuales}
+
+En las Figuras \ref{fig:unemp_resids} y \ref{fig:crime_resids} podemos observar que no existe autocorrelación en los resiudales. Esto lo podemos comprobar de manera formal a través del test \emph{Breusch-Godfrey}, cuya hipótesis nula es  \emph{H\textsubscript{0}: No hay correlación serial de ningún orden hasta p}. En este caso, el \emph{p-value} es mayor a 0.05, por lo que se acepta la hipótesis nula de no correlación. 
+
+<<breush_godfrey, echo=FALSE>>=
+serial.test(my.model, type = 'BG', lags.bg = 3)
+@
+
+Sin embargo, los residuos no pasan la prueba \emph{Jarque-Bera} de normalidad, donde \emph{H\textsubscript{0}: Los datos son normalmente distribuidos}. Podemos observar en la Figura \ref{fig:jb} que tienen una distribución leptocúrtica. Para corregir esta parte del model se recomienda utilizar una variable dummy en los periodos de crísis, donde el desempleo tiene un comportamiento atípico.
+
+<<JB, echo=FALSE>>=
+norm.test <- normality.test(my.model) # No tiene distribución normal
+norm.test$jb.mul$JB
+@
+
+\subsection{Causalidad de Granger}
+Por útlimo, corremos el test de \emph{Causalidad de Granger} para ver si los rezagos del desempleo en este caso, ayudan a explicar el valor presente (\emph{t}) del crímen. 
+
+<<granger_on_crime, echo=FALSE>>=
+causality(my.model, cause = c("unemp"))$Granger
+@
+Repetimos el ejercicio para ver si el crimen causa al desempleo: 
+<<granger_on_unemp, echo=FALSE>>=
+causality(my.model, cause = c("crime"))$Granger
+@
+La hipótesis nula de la Causalidad de Gragner indica que \emph{H\textsubscript{0}: x no Granger - causa a y}. En ambos casos el \emph{p-value} resultó ser menor que 0.05, por lo que se rechaza la hipótesis nula, indicando que ambas variables son \textbf{endógenas}, confirmando lo que observamos al analizar el resumen del modelo. Lo anterior resulta curioso, dado que la bibliografía que indica un impacto del crímen en el desempleo es muy escasa y poco documentada. 
+
+\section{Resultados y Conclusiones}
+
+\subsection{Impulso Respuesta}
+La Figura \ref{fig:irf_un_cr} representa el comportamiento del crimen tras un impacto de una desviación estándar en el desempleo. Podemos observar que los efectos comienzan tras un periodo, con una disminución del crimen, la cual llega a su mínimo en el periodo 3. Posteriormente tiene una tendencia alcista hasta el periodo 5, donde sigue subienod de manera menos pronunciada durante otro periodo. Después de esto el crimen se estabiliza por el impacto y converge a su tendencia incial alrededor del periodo 12. 
+
+\begin{figure}[H]
+\begin{center}
+<<label=ir_unemp_crime, fig=TRUE, echo=F, height=4>>=
+plot(irf(my.model, impulse = 'unemp', response = 'crime', n.ahead = 15, boot = T))
+@
+\end{center}
+\caption{Impulso respuesta del Desempleo en el Crimen}
+\label{fig:irf_un_cr}
+\end{figure}
+
+\subsection{Conclusión}
+A partir de este modelo confirmamos la teoría propuesta por Cantor y Land (1985) de que el desempleo tiene un efecto rezagado. Adicionalmente observamos que, el efecto motivacional tiene un retraso mucho mayor que la oportunidad del crímen (la cual es casi inmediata). Lo anterior se pudo apreciar en la gráfica de impulso respuesta, observamos que los primeros años tras un shock en el desempleo tienen un efecto negativo, lo que se explicaría a travez de la reducción de la oportunidad de crímen, es decir,  aumento agentes de seguridad y de disminución de víctimas. La tendencia alcista se podría explicar por la frustración y costo-beneficio de los desempleado tras unos cuantos periodos, en lo que pueden estar recibiendo ayuda del gobierno, familiares o amigos antes de entrar en desesperación.\\
+
+Una parte inesperada fue que el crímen parece influir en el desempleo, a pesar de que la mayoría de las investigaciones toman el desempleo como una variable exógena, el modelo apunta a que el crimen también mantiene un efecto bastante significativo sobre este. Como se mencionó previamente, las investigaciones que abordan el problema desde esta perspectiva son muy escasas y la mayoría toman muestras a nivel municipal o estatal; faltaría encontrar una explicación a nivel país.
+
+%-----------------------------------------------------------------------------
+\pagebreak
+\section{Bibliografía}
+\noindent Antoni Calvó-Armengol and Yves Zenou (2003). Discrimination et inégalités / Discrimination and Unequal Outcome || Does Crime Affect Unemployment? The Role of Social Networks. Annales d'Économie et de Statistique, (71-72), 173–188. doi:10.2307/20079051 \\
+
+\noindent Bennet, P. and Ouazad A. (2016). The relationship between job displacement and crime | VOX, CEPR Policy Portal. Voxeu.org. https://voxeu.org/article/relationship-between-job-displacement-and-crime\\
+
+\noindent Cook, S.; Watson, D. (2014). A re-examination of the opportunity and motivation effects underlying criminal activity. Criminology and Criminal Justice, 14(4), 458–469. doi:10.1177/1748895813502499 \\
+
+\noindent David Cantor and Kenneth C. Land (1985). Unemployment and Crime Rates in the Post-World War II United States: A Theoretical and Empirical Analysis. American Sociological Review, 50(3), 317–332. doi:10.2307/2095542 \\
+
+\noindent Gao, G.; Liu, B. and Kouassi, I. (2014). THE CONTEMPORANEOUS EFFECT OF UNEMPLOYMENT ON CRIME RATES: THE CASE OF INDIANA. https://swer.wtamu.edu/sites/default/files/Data/Gao.pdf\\
+
+\noindent Novales, A. (2014). Modelos vectoriales autoregresivos (VAR). \href{https://www.ucm.es/data/cont/media/www/pag-41459/VAR.pdf}{https://...url}\\
+
+\noindent Raphael, Steven; Winter‐Ebmer, Rudolf (2001). Identifying the Effect of Unemployment on Crime. Journal of Law and Economics, 44(1), 259–283. doi:10.1086/320275 \\
+
+\noindent Rosenfeld, R. (2013). Crime and the Great Recession. Journal of Contemporary Criminal Justice, 30(1), 4–6. https://doi.org/10.1177/1043986213509540
+
+\pagebreak
+\section{Apéndice}
+
+%----------------------------------------------------------------------------
+\noindent\textbf{\Large Autocorrelación en los residuales}
+\begin{figure}[H]
+\begin{center}
+<<label=resids_unemp, fig=TRUE, echo=F, height=4>>=
+unemp_resids <- my.model$varresult$unemp$residuals
+tsdisplay(unemp_resids, main = 'Residuales del Desempleo')
+@
+\end{center}
+\caption{Residuales del modelo VAR(3) en la serie de tiempo del Desempleo}
+\label{fig:unemp_resids}
+\end{figure}
+
+\begin{figure}[H]
+\begin{center}
+<<label=resids_crime, fig=TRUE, echo=F, height=4>>=
+tsdisplay(my.model$varresult$crime$residuals, main = 'Residuales del Crimen')
+@
+\end{center}
+\caption{Residuales del modelo VAR(3) en la serie de tiempo del Crimen}
+\label{fig:crime_resids}
+\end{figure}
+
+%----------------------------------------------------------------------------
+\pagebreak
+\noindent\textbf{\Large Normalidad de los residuos}
+\begin{figure}[H]
+\begin{center}
+<<label=jb, fig=TRUE, echo=F, height=3.5, width=3.5>>=
+resids <- residuals(my.model)
+
+h <- hist(resids, main = 'Histograma de los residuos', cex.main = 0.75, 
+          cex.lab=0.7, cex.axis=0.7)
+xfit <- seq(min(resids), max(resids), length = 40) 
+yfit <- dnorm(xfit, mean = mean(resids), sd = sd(resids)) 
+yfit <- yfit * diff(h$mids[1:2]) * length(resids) 
+lines(xfit, yfit, col = "black", lwd = 2)
+@
+\end{center}
+\caption{Distribución de los residuos}
+\label{fig:jb}
+\end{figure}
+
+\noindent\textbf{\Large Impulso respuesta del crimen sobre el desempleo}
+\begin{figure}[H]
+\begin{center}
+<<label=ir_crime_unemp, fig=TRUE, echo=F, height=3.5>>=
+plot(irf(my.model, impulse = 'crime' , response = 'unemp', n.ahead = 20, boot = T))
+@
+\end{center}
+\caption{Impulso respuesta del Crimen en el Desempleo}
+\label{fig:irf_cr_un}
+\end{figure}
+
+%----------------------------------------------------------------------------
+
+\noindent\textbf{\Large Resumen del modelo}
+
+A continuación se presenta el resumen completo del modelo. 
+\label{resumen_modelo}
+<<summary_model, echo=FALSE>>=
+summary(my.model)
+@
+
+
+\end{document}
